@@ -41,7 +41,7 @@ stages:
      - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
        workingDirectory: './terraform'
        displayName: 'Terraform init'
-     - script: terraform plan -out=dev-app-config.tfplan -var="client-id=$(client-id)" -var="client-secret=$(client-secret)" -var="subscription-id=$(subscription-id)" -var="tenant-id=$(tenant-id)" -var-file="dev.tfvars"
+     - script: terraform plan -out=datalake.tfplan -var="client-id=$(client-id)" -var="client-secret=$(client-secret)" -var="subscription-id=$(subscription-id)" -var="tenant-id=$(tenant-id)" -var-file="dev.tfvars"
        workingDirectory: './terraform'
        displayName: 'Terraform Plan'
      - task: Copyfiles@2
@@ -65,7 +65,7 @@ stages:
      variables:
       - group: 'Dev-test-Keyvault-Variables'
       - name: state-key
-        value: 'devtest-app-config-state'
+        value: 'datalake-state'
       - name: env
         value: dev  
      steps:

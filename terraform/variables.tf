@@ -6,5 +6,5 @@ variable "client-secret" {}
 variable "subscription-id" {}
 variable "tenant-id" {}
 variable "container-name" {
-    type = (list)
+    type = list(string)
 }
