@@ -1,0 +1,262 @@
+trigger:
+  branches:
+     include:
+     - master
+     
+stages:
+ - stage: Plan_Devtest
+   jobs:
+   - job: Plan
+     pool:
+       vmImage: 'Ubuntu-20.04'
+     continueOnError: false
+     variables:
+     - group: 'Dev-test-Keyvault-Variables'
+     - name: state-key
+       value: 'datalake-state'
+     - name: env
+       value: dev  
+     # Install the latest version of Terraform using task: https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform
+     steps:
+     - task: replacetokens@3
+       displayName: 'Replace Tokens'
+       inputs:
+        rootDirectory: '$(Build.Repository.LocalPath)/terraform'
+        targetFiles: 'dev.tfvars'
+        encoding: 'auto'
+        writeBOM: true
+        verbosity: 'detailed'
+        actionOnMissing: 'fail'
+        keepToken: false
+        tokenPrefix: '#{'
+        tokenSuffix: '}#'
+        useLegacyPattern: false
+        enableTelemetry: false
+            
+     - task: TerraformInstaller@0
+       inputs:
+         terraformVersion: '0.15.3'
+     # Initialize and plan terraform using native commands and variable references. 
+     # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch
+     - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+       workingDirectory: './terraform'
+       displayName: 'Terraform init'
+     - script: terraform plan -out=dev-app-config.tfplan -var="client-id=$(client-id)" -var="client-secret=$(client-secret)" -var="subscription-id=$(subscription-id)" -var="tenant-id=$(tenant-id)" -var-file="dev.tfvars"
+       workingDirectory: './terraform'
+       displayName: 'Terraform Plan'
+     - task: Copyfiles@2
+       displayName: 'Copy Files to: $(build.artifactstagingdirectory)/Terraform'
+       inputs:
+           SourceFolder: './terraform'
+           Contents: 'datalake.tfplan'
+           TargetFolder: '$(build.artifactstagingdirectory)'
+     - task: PublishBuildArtifacts@1
+       displayName: 'Publish Artifact: tfplan'
+       inputs:
+        ArtifactName: tfplan
+               
+ - stage: Deploy_Devtest
+   dependsOn: Plan_Devtest 
+   jobs:
+   - job: Apply
+     pool:
+      vmImage: 'Ubuntu-20.04'
+     continueOnError: false
+     variables:
+      - group: 'Dev-test-Keyvault-Variables'
+      - name: state-key
+        value: 'devtest-app-config-state'
+      - name: env
+        value: dev  
+     steps:
+     - task: TerraformInstaller@0
+       inputs:
+        terraformVersion: '0.15.3'  
+     - task: DownloadBuildArtifacts@0
+       inputs:
+             artifactName: tfplan
+             downloadPath: './terraform'
+     - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+       workingDirectory: './terraform'
+       displayName: 'Terraform init'    
+     - script: terraform apply ./tfplan/datalake.tfplan
+       workingDirectory: './terraform'
+       displayName: 'Terraform Apply'
+          # track deployments on the environment
+   - deployment: Terraform_Apply_DevTest
+     pool:
+      vmImage: 'Ubuntu-20.04'
+          # creates an environment if it doesn’t exist
+     environment: 'Devtest-Wbl-Analytics'       
+
+#  - stage: Plan_Staging
+#    dependsOn: Plan_Devtest
+#    jobs:
+#    - job: Plan
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#      continueOnError: false
+#      variables:
+#       - group: 'Terraform-Staging'
+#       - name: state-key
+#         value: 'staging-app-config-state'
+#       - name: env
+#         value: staging  
+#           # Install the latest version of Terraform using task: https://marketplace.visualstudio.com/items?itemName=charleszipp.azure-pipelines-tasks-terraform
+#      steps:
+#      - task: replacetokens@3
+#        displayName: 'Replace Tokens'
+#        inputs:
+#         rootDirectory: '$(Build.Repository.LocalPath)/terraform'
+#         targetFiles: 'staging.tfvars'
+#         encoding: 'auto'
+#         writeBOM: true
+#         verbosity: 'detailed'
+#         actionOnMissing: 'fail'
+#         keepToken: false
+#         tokenPrefix: '#{'
+#         tokenSuffix: '}#'
+#         useLegacyPattern: false
+#         enableTelemetry: false
+                 
+#      - task: TerraformInstaller@0
+#        inputs:
+#         terraformVersion: '0.15.3'
+#           # Initialize and plan terraform using native commands and variable references. 
+#           # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch
+#      - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform init'
+#      - script: terraform plan -out=staging-app-config.tfplan -var="client-id=$(client-id)" -var="client-secret=$(client-secret)" -var="subscription-id=$(subscription-id)" -var="tenant-id=$(tenant-id)" -var-file="staging.tfvars"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform Plan'
+#      - task: Copyfiles@2
+#        displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+#        inputs:
+#         SourceFolder: './terraform'
+#         Contents: 'staging-app-config.tfplan'
+#         TargetFolder: '$(build.artifactstagingdirectory)'
+#      - task: PublishBuildArtifacts@1
+#        displayName: 'Publish Artifact: tfplan'
+#        inputs:
+#         ArtifactName: tfplan
+
+#  - stage: Deploy_Staging
+#    jobs:
+#    - job: Apply
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#      continueOnError: false
+#      variables:
+#        - group: 'Terraform-Staging'
+#        - name: state-key
+#          value: 'staging-app-config-state'
+#        - name: env
+#          value: staging 
+#      steps:
+#      - task: TerraformInstaller@0
+#        inputs:
+#         terraformVersion: '0.15.3'  
+#      - task: DownloadBuildArtifacts@0
+#        inputs:
+#         artifactName: tfplan
+#         downloadPath: './terraform'
+#      - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform init'    
+#      - script: terraform apply ./tfplan/staging-app-config.tfplan
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform Apply'
+#                     # track deployments on the environment
+#    - deployment: Terraform_Apply_Staging
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#                     # creates an environment if it doesn’t exist
+#      environment: 'Staging-App-Configuration'       
+ 
+#  - stage: Plan_Prod
+#    dependsOn: Plan_Devtest
+#    jobs:
+#    - job: Plan
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#      continueOnError: false
+#      variables:
+#       - group: 'TerraformClient - Production'
+#       - group: 'TerraformState-IDR- Production'
+#       - name: state-key
+#         value: 'prod-app-config-state'
+#       - name: env
+#         value: 'prod' 
+#      steps:
+#      - task: replacetokens@3
+#        displayName: 'Replace Tokens'
+#        inputs:
+#         rootDirectory: '$(Build.Repository.LocalPath)/terraform'
+#         targetFiles: 'prod.tfvars'
+#         encoding: 'auto'
+#         writeBOM: true
+#         verbosity: 'detailed'
+#         actionOnMissing: 'fail'
+#         keepToken: false
+#         tokenPrefix: '#{'
+#         tokenSuffix: '}#'
+#         useLegacyPattern: false
+#         enableTelemetry: false
+               
+#      - task: TerraformInstaller@0
+#        inputs:
+#         terraformVersion: '0.15.3'
+#         # Initialize and plan terraform using native commands and variable references. 
+#         # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch
+#      - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform init'
+#      - script: terraform plan -out=prod-app-config.tfplan -var="client-id=$(client-id)" -var="client-secret=$(client-secret)" -var="subscription-id=$(subscription-id)" -var="tenant-id=$(tenant-id)" -var-file="prod.tfvars"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform Plan'
+#      - task: Copyfiles@2
+#        displayName: 'Copy Files to: $(build.artifactstagingdirectory)/Terraform'
+#        inputs:
+#         SourceFolder: './terraform'
+#         Contents: 'prod-app-config.tfplan'
+#         TargetFolder: '$(build.artifactstagingdirectory)'
+#      - task: PublishBuildArtifacts@1
+#        displayName: 'Publish Artifact: tfplan'
+#        inputs:
+#         ArtifactName: tfplan
+        
+#  - stage: Deploy_prod
+#    jobs:
+#    - job: Apply
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#       continueOnError: false
+#      variables:
+#      - group: 'TerraformClient - Production'
+#      - group: 'TerraformState-IDR- Production'
+#      - name: state-key
+#        value: 'prod-app-config-state'
+#      - name: env
+#        value: 'prod' 
+#      steps:
+#      - task: TerraformInstaller@0
+#        inputs:
+#         terraformVersion: '0.15.3'  
+#      - task: DownloadBuildArtifacts@0
+#        inputs:
+#         artifactName: tfplan
+#         downloadPath: './terraform'
+#      - script: terraform init -backend-config="resource_group_name=$(resource-group)" -backend-config="storage_account_name=$(storage-account)" -backend-config="container_name=$(container-name)" -backend-config="key=$(state-key)" -backend-config="access_key=$(access-key)"
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform init'    
+#      - script: terraform apply ./tfplan/prod-app-config.tfplan
+#        workingDirectory: './terraform'
+#        displayName: 'Terraform Apply'
+#                          # track deployments on the environment
+#    - deployment: Terraform_Apply_Production
+#      pool:
+#       vmImage: 'Ubuntu-20.04'
+#                          # creates an environment if it doesn’t exist
+#      environment: 'Production-App-configuration'
+              
