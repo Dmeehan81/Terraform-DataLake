@@ -1,5 +1,4 @@
 variable "rg-name" {}
-variable "location" {}
 variable "storage-account-name" {}
 variable "client-id" {}
 variable "client-secret" {}

@@ -1,14 +1,12 @@
 
 data azurerm_resource_group "rg" {
-
      name      = var.rg-name
-     location  = var.location  
 }
 
 data azurerm_storage_account "DL" {
 
     name                    = var.storage-account-name
-    resource_group_name     = azurerm_resource_group.rg.name
+    resource_group_name     = data.azurerm_resource_group.rg.name
 }
 
 
