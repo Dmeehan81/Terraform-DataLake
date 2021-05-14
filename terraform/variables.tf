@@ -7,3 +7,10 @@ variable "tenant-id" {}
 variable "container-name" {
     type = list(string)
 }
+variable "prod-dir" {
+    type = list(string)
+}
+
+variable "test-dir" {
+    type = list(string)
+}
