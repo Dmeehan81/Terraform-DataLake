@@ -5,5 +5,5 @@ container-name = ["webline-analytics-prod-asu-requests","webline-analytics-prod-
 
 prod-dir = ["asu-requests", "asu-responses", "origo-requests", "origo-responses","quote-instructions"]
 test-dir = ["origo-requests", "origo-responses", "quote-instructions"]
-prod-containers = "Webline-analytics-prod"
+prod-containers = "webline-analytics-prod"
 test-containers = "webline-analytics-test"
