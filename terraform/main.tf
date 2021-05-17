@@ -19,7 +19,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
     id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
     permissions = "rwx"
   }
-   {
+  ace {
     type = "group"
     id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
     permissions = "rwx"
@@ -35,7 +35,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "prod" {
     id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
     permissions = "rwx"
   }
-   {
+  ace {
     type = "group"
     id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
     permissions = "rwx"
@@ -50,7 +50,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "test" {
     id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
     permissions = "rwx"
   }
-   {
+  ace {
     type = "group"
     id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
     permissions = "rwx"
