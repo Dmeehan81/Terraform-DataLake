@@ -14,3 +14,6 @@ variable "prod-dir" {
 variable "test-dir" {
     type = list(string)
 }
+
+variable "prod-containers" {}
+variable "test-containers" {}

@@ -16,10 +16,20 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
   storage_account_id = data.azurerm_storage_account.DL.id
 }
 
+resource "azurerm_storage_data_lake_gen2_filesystem" "prod" { 
+  name               = var.prod-containers
+  storage_account_id = data.azurerm_storage_account.DL.id
+}
+
+resource "azurerm_storage_data_lake_gen2_filesystem" "test" { 
+  name               = var.test-containers
+  storage_account_id = data.azurerm_storage_account.DL.id
+}
+
 resource "azurerm_storage_data_lake_gen2_path" "prod" {
   count              = length(var.prod-dir)   
-  path               = var.prod-dir
-  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.lake.webline-analytics-prod
+  path               = var.prod-dir[count.index]
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.prod.name
   storage_account_id = data.azurerm_storage_account.DL.id
   resource           = "directory"
 }
@@ -27,7 +37,7 @@ resource "azurerm_storage_data_lake_gen2_path" "prod" {
 resource "azurerm_storage_data_lake_gen2_path" "test" {
   count              = length(var.test-dir)   
   path               = var.test-dir[count.index]
-  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.lake.webline-analytics-test
+  filesystem_name    = azurerm_storage_data_lake_gen2_filesystem.test.name
   storage_account_id = data.azurerm_storage_account.DL.id
   resource           = "directory"
 }
