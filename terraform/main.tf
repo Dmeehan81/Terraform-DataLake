@@ -14,16 +14,47 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
   count              = length(var.container-name)  
   name               = var.container-name[count.index]
   storage_account_id = data.azurerm_storage_account.DL.id
+  ace {
+    type = "user"
+    id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
+    permissions = "rwx"
+  },
+  ace {
+    type = "group"
+    id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
+    permissions = "rwx"
+  }
+
 }
 
 resource "azurerm_storage_data_lake_gen2_filesystem" "prod" { 
   name               = var.prod-containers
   storage_account_id = data.azurerm_storage_account.DL.id
+  ace {
+    type = "user"
+    id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
+    permissions = "rwx"
+  },
+  ace {
+    type = "group"
+    id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
+    permissions = "rwx"
+  }
 }
 
 resource "azurerm_storage_data_lake_gen2_filesystem" "test" { 
   name               = var.test-containers
   storage_account_id = data.azurerm_storage_account.DL.id
+  ace {
+    type = "user"
+    id = "fad176ea-3cae-4dac-aac4-6e21d501cede"
+    permissions = "rwx"
+  },
+  ace {
+    type = "group"
+    id = "217c908a-2b89-43a3-9301-9f3e2b76dce6"
+    permissions = "rwx"
+  }
 }
 
 resource "azurerm_storage_data_lake_gen2_path" "prod" {
