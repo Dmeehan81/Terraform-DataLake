@@ -73,6 +73,12 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "test" {
     id = "0f287e94-a307-41dc-a051-34b955797757"
     permissions = "rwx"
   }
+
+   ace {
+    type = "user"
+    id = "c26141fd-8a37-4227-9d88-20efb57b40a7"
+    permissions = "rwx"
+  }
 }
 
 resource "azurerm_storage_data_lake_gen2_path" "prod" {
