@@ -27,7 +27,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
 
   ace {
     type = "user"
-    id = "b2e7043e-714f-48e5-b00f-56b431cc833f"
+    id = "daf43664-6f96-483e-b98b-f2ad7066b69b"
     permissions = "rwx"
   }
 
