@@ -37,6 +37,12 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
     permissions = "rwx"
   }
 
+    ace {
+    type = "user"
+    id = "b2e7043e-714f-48e5-b00f-56b431cc833f"
+    permissions = "rwx"
+  }
+
 }
 
 resource "azurerm_storage_data_lake_gen2_filesystem" "prod" { 
@@ -86,11 +92,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "test" {
     permissions = "rwx"
   }
 
-    ace {
-    type = "user"
-    id = "b2e7043e-714f-48e5-b00f-56b431cc833f"
-    permissions = "rwx"
-  }
+  
 }
 
 resource "azurerm_storage_data_lake_gen2_path" "prod" {
