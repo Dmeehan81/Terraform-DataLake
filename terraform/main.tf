@@ -47,7 +47,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "lake" {
    ace {
     type = "group"
     id = "7848240d-fa40-4e30-bb42-c5894ffa0342"
-    permissions = "r"
+    permissions = "r-"
   }
 
 }
@@ -87,7 +87,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "prod" {
    ace {
     type = "group"
     id = "7848240d-fa40-4e30-bb42-c5894ffa0342"
-    permissions = "r"
+    permissions = "r-"
   }
 
 }
@@ -128,7 +128,7 @@ resource "azurerm_storage_data_lake_gen2_filesystem" "test" {
    ace {
     type = "group"
     id = "7848240d-fa40-4e30-bb42-c5894ffa0342"
-    permissions = "r"
+    permissions = "r-"
   }
 
 
